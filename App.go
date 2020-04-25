@@ -31,7 +31,7 @@ type DataStruc struct {
 }
 
 func main() {
-	GetInformacion()
+	getData()
 }
 
 func GetInformacion() {
@@ -98,6 +98,10 @@ func getData() {
 
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("Access-Control-Allow-Origin", "https://www.tiendacercasv.com")
+	request.Header.Set("Content-Length", "229")
+	request.Header.Set("Connection", "keep-alive")
+	request.Header.Set("User-Agent", "insomnia/7.1.1")
+	request.Header.Set("Accept", "*/*")
 	response, err := client.Do(request)
 
 	if err != nil {
