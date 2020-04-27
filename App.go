@@ -70,7 +70,10 @@ func GetInformacion() {
 
 	fmt.Println("--------------------------------------------------------------------")
 	departamentos := GetDepartamentos()
+	//pretty.Println(departamentos)
+
 	for _, departamento := range departamentos.ListaDepartamentos {
+		pretty.Println(departamento.Nombre)
 		for _, municipio := range departamento.Municipios {
 			IDMunicipio := GetIDMunicipio(municipio + "," + departamento.Nombre)
 			//detalleLugar := FindPlaceByID(IDMunicipio)
@@ -135,6 +138,7 @@ func getData(dt DataStruc) {
 	}
 }
 
+//Obtine los de departamentos desde archivo json
 func GetDepartamentos() modelo.Departamentos {
 	ManejadorDepartamentos, err := ioutil.ReadFile("Departamentos.json")
 	if err != nil {
@@ -174,5 +178,9 @@ func GetIDMunicipio(lugar string) string {
 	}
 
 	pretty.Println(result)
-	return result.Candidates[0].PlaceID
+	var PlaceID string
+	for _, can := range result.Candidates {
+		PlaceID = can.PlaceID
+	}
+	return PlaceID
 }
