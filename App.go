@@ -6,11 +6,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/kr/pretty"
+	"googlemaps.github.io/maps"
 	"io/ioutil"
 	"log"
 	"net/http"
-
-	"googlemaps.github.io/maps"
+	//"github.com/360EntSecGroup-Skylar/excelize"
 )
 
 var (
@@ -32,7 +33,34 @@ type DataStruc struct {
 	Westh       float64 `json:"westh"`
 }
 
+func GetIDDepartamentos(lugar string) {
+	//datos := &maps.place
+	c, err := maps.NewClient(maps.WithAPIKey(CLAVEJUAN))
+	if err != nil {
+		log.Fatal(fmt.Sprintf("Ocurrio un error %e", err))
+	}
+	findLugar := &maps.FindPlaceFromTextRequest{
+		Input:                 lugar,
+		InputType:             "textquery",
+		Fields:                nil,
+		LocationBias:          "",
+		LocationBiasPoint:     nil,
+		LocationBiasCenter:    nil,
+		LocationBiasRadius:    0,
+		LocationBiasSouthWest: nil,
+		LocationBiasNorthEast: nil,
+	}
+
+	result, errorFindPlace := c.FindPlaceFromText(context.Background(), findLugar)
+	if errorFindPlace != nil {
+		log.Fatal(fmt.Sprintf("error findplace %e", errorFindPlace))
+	}
+
+	pretty.Println(result)
+}
 func main() {
+	GetIDDepartamentos("Candelaria,Cuscatlán")
+	fmt.Println("------------------------------------")
 	GetInformacion()
 }
 
@@ -44,27 +72,29 @@ func GetInformacion() {
 
 	//r2 := &maps.FindPlaceFromTextInputTypeTextQuery("")
 	r3 := &maps.PlaceDetailsRequest{
-		PlaceID:      "ChIJL13XQfeXYo8ROb7a0b7clBw",
+		PlaceID: "ChIJCVt4J6lPY48R77BngjCT2C8",
+		//"ChIJL13XQfeXYo8ROb7a0b7clBw",
 		Language:     "",
 		Fields:       nil,
 		SessionToken: maps.PlaceAutocompleteSessionToken{},
 		Region:       "",
 	}
 
-	algo2, err := c.PlaceDetails(context.Background(), r3)
+	DetalleLugar, err := c.PlaceDetails(context.Background(), r3)
 	if err != nil {
 		log.Fatal(fmt.Sprintf("Ocurrio un error  %e", err))
 	}
-
+	pretty.Println(DetalleLugar)
+	fmt.Println("--------------------------------------------------------------------")
 	//center
-	Centerlat := algo2.Geometry.Location.Lat
-	Centerlag := algo2.Geometry.Location.Lng
+	Centerlat := DetalleLugar.Geometry.Location.Lat
+	Centerlag := DetalleLugar.Geometry.Location.Lng
 
 	//ubicaciones de
-	north := algo2.Geometry.Viewport.NorthEast.Lat
-	east := algo2.Geometry.Viewport.NorthEast.Lng
-	south := algo2.Geometry.Viewport.SouthWest.Lat
-	west := algo2.Geometry.Viewport.SouthWest.Lng
+	north := DetalleLugar.Geometry.Viewport.NorthEast.Lat
+	east := DetalleLugar.Geometry.Viewport.NorthEast.Lng
+	south := DetalleLugar.Geometry.Viewport.SouthWest.Lat
+	west := DetalleLugar.Geometry.Viewport.SouthWest.Lng
 
 	dt := DataStruc{
 		Center: struct {
