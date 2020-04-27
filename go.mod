@@ -1,4 +1,4 @@
-module CoordenadasTiendaCercaSV
+module github.com/julioolivares90/CoordenadasTiendaCercaSV
 
 go 1.14
 
