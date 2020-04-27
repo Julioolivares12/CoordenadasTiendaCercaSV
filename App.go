@@ -8,10 +8,15 @@ import (
 	"fmt"
 	"github.com/kr/pretty"
 	"googlemaps.github.io/maps"
+	"gopkg.in/h2non/gentleman.v2/plugins/body"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
+
 	//"github.com/360EntSecGroup-Skylar/excelize"
+	"github.com/labstack/echo/v4"
+	"gopkg.in/h2non/gentleman.v2"
 )
 
 var (
@@ -34,11 +39,11 @@ type DataStruc struct {
 }
 
 func main() {
-	//GetIDDepartamentos("Candelaria,Cuscatlán")
-	fmt.Println("------------------------------------Inicio--------------------------------------------------------------------")
-	fmt.Println("---------------------------------Obteniendo municipios---------------------------------------------------------")
 
-	GetInformacion()
+	serverRun()
+	//ID :=GetIDMunicipio("Santiago Texacuangos , San Salvador")
+	//pretty.Println(ID)
+	//GetInformacion()
 }
 
 //FindPlaceByID Busca un lugar por ID
@@ -61,7 +66,7 @@ func FindPlaceByID(ID string) maps.PlaceDetailsResult {
 	if err != nil {
 		log.Fatal(fmt.Sprintf("Ocurrio un error  %e", err))
 	}
-	pretty.Println(DetalleLugar)
+	//pretty.Println(DetalleLugar)
 	return DetalleLugar
 }
 func GetInformacion() {
@@ -73,10 +78,13 @@ func GetInformacion() {
 	//pretty.Println(departamentos)
 
 	for _, departamento := range departamentos.ListaDepartamentos {
-		pretty.Println(departamento.Nombre)
+		//pretty.Println(departamento.Nombre)
 		for _, municipio := range departamento.Municipios {
+			//fmt.Println(fmt.Sprintf("Departamento: %s - Municipio: %s",departamento.Nombre,municipio))
 			IDMunicipio := GetIDMunicipio(municipio + "," + departamento.Nombre)
+			//pretty.Println(fmt.Sprintf("Departamento: %s  - Municipio: %s  IDMunicipio : %s",departamento.Nombre,municipio,IDMunicipio))
 			//detalleLugar := FindPlaceByID(IDMunicipio)
+
 			FindDatosTiendaCerca(IDMunicipio)
 		}
 	}
@@ -109,10 +117,34 @@ func FindDatosTiendaCerca(ID string) {
 		Sourth:      south,
 		Westh:       west,
 	}
+	getDatosTienda(dt)
 	//pretty.Println(dt)
-	getData(dt)
+	//getData(dt)
 }
+func getDatosTienda(dt DataStruc) {
+	/*
+		jsonData ,err  :=json.Marshal(dt)
 
+		if err != nil {
+			log.Fatal(fmt.Sprintf("Ocurrio un error %e",err))
+		}
+	*/
+	client := gentleman.New()
+	client.URL(ENDPOINT)
+
+	req := client.Request()
+
+	req.SetHeader("Content-Type", "application/json")
+	req.SetHeader("Access-Control-Allow-Origin", "https://www.tiendacercasv.com")
+	req.Method("POST")
+	req.Use(body.JSON(dt))
+
+	res, errorRequest := req.Send()
+	if errorRequest != nil {
+		log.Fatal(fmt.Sprintf("ocurrion un error %e", errorRequest))
+	}
+	pretty.Println(res.String())
+}
 func getData(dt DataStruc) {
 	fmt.Println("Hola mundo")
 
@@ -183,4 +215,27 @@ func GetIDMunicipio(lugar string) string {
 		PlaceID = can.PlaceID
 	}
 	return PlaceID
+}
+
+func serverRun() {
+	e := echo.New()
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "5000"
+	}
+	e.GET("/api/v1/departamentos/:municipio", func(c echo.Context) error {
+
+		municiopio := c.Param("municipio")
+
+		IDMuniciopio := GetIDMunicipio(municiopio)
+
+		datos := FindPlaceByID(IDMuniciopio)
+
+		return c.JSON(http.StatusOK, datos)
+	})
+	e.GET("/api/v1/departamentos", func(c echo.Context) error {
+		departamentos := GetDepartamentos()
+		return c.JSON(http.StatusOK, departamentos)
+	})
+	e.Logger.Fatal(e.Start(":" + port))
 }
