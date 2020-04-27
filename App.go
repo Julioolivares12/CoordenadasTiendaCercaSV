@@ -33,46 +33,23 @@ type DataStruc struct {
 	Westh       float64 `json:"westh"`
 }
 
-func GetIDDepartamentos(lugar string) {
-	//datos := &maps.place
-	c, err := maps.NewClient(maps.WithAPIKey(CLAVEJUAN))
-	if err != nil {
-		log.Fatal(fmt.Sprintf("Ocurrio un error %e", err))
-	}
-	findLugar := &maps.FindPlaceFromTextRequest{
-		Input:                 lugar,
-		InputType:             "textquery",
-		Fields:                nil,
-		LocationBias:          "",
-		LocationBiasPoint:     nil,
-		LocationBiasCenter:    nil,
-		LocationBiasRadius:    0,
-		LocationBiasSouthWest: nil,
-		LocationBiasNorthEast: nil,
-	}
-
-	result, errorFindPlace := c.FindPlaceFromText(context.Background(), findLugar)
-	if errorFindPlace != nil {
-		log.Fatal(fmt.Sprintf("error findplace %e", errorFindPlace))
-	}
-
-	pretty.Println(result)
-}
 func main() {
-	GetIDDepartamentos("Candelaria,Cuscatlán")
-	fmt.Println("------------------------------------")
+	//GetIDDepartamentos("Candelaria,Cuscatlán")
+	fmt.Println("------------------------------------Inicio--------------------------------------------------------------------")
+	fmt.Println("---------------------------------Obteniendo municipios---------------------------------------------------------")
+
 	GetInformacion()
 }
 
-func GetInformacion() {
+//FindPlaceByID Busca un lugar por ID
+func FindPlaceByID(ID string) maps.PlaceDetailsResult {
 	c, err := maps.NewClient(maps.WithAPIKey(CLAVEJUAN))
 	if err != nil {
 		log.Fatalf("fatal error: %s", err.Error())
 	}
-
-	//r2 := &maps.FindPlaceFromTextInputTypeTextQuery("")
 	r3 := &maps.PlaceDetailsRequest{
-		PlaceID: "ChIJCVt4J6lPY48R77BngjCT2C8",
+		PlaceID: ID,
+		//"ChIJCVt4J6lPY48R77BngjCT2C8",
 		//"ChIJL13XQfeXYo8ROb7a0b7clBw",
 		Language:     "",
 		Fields:       nil,
@@ -85,7 +62,28 @@ func GetInformacion() {
 		log.Fatal(fmt.Sprintf("Ocurrio un error  %e", err))
 	}
 	pretty.Println(DetalleLugar)
+	return DetalleLugar
+}
+func GetInformacion() {
+
+	//r2 := &maps.FindPlaceFromTextInputTypeTextQuery("")
+
 	fmt.Println("--------------------------------------------------------------------")
+	departamentos := GetDepartamentos()
+	for _, departamento := range departamentos.ListaDepartamentos {
+		for _, municipio := range departamento.Municipios {
+			IDMunicipio := GetIDMunicipio(municipio + "," + departamento.Nombre)
+			//detalleLugar := FindPlaceByID(IDMunicipio)
+			FindDatosTiendaCerca(IDMunicipio)
+		}
+	}
+
+	//getData(dt)
+
+}
+
+func FindDatosTiendaCerca(ID string) {
+	DetalleLugar := FindPlaceByID(ID)
 	//center
 	Centerlat := DetalleLugar.Geometry.Location.Lat
 	Centerlag := DetalleLugar.Geometry.Location.Lng
@@ -108,8 +106,8 @@ func GetInformacion() {
 		Sourth:      south,
 		Westh:       west,
 	}
+	//pretty.Println(dt)
 	getData(dt)
-
 }
 
 func getData(dt DataStruc) {
@@ -148,4 +146,33 @@ func GetDepartamentos() modelo.Departamentos {
 		log.Fatal(fmt.Sprintf("Ocurrio un error al parsear el archivo %e", err))
 	}
 	return dp
+}
+
+//Busca El ID de cada Departamento segun su nombre
+func GetIDMunicipio(lugar string) string {
+	//datos := &maps.place
+	c, err := maps.NewClient(maps.WithAPIKey(CLAVEJUAN))
+	if err != nil {
+		log.Fatal(fmt.Sprintf("Ocurrio un error %e", err))
+	}
+	findLugar := &maps.FindPlaceFromTextRequest{
+		Input:                 lugar,
+		InputType:             "textquery",
+		Fields:                nil,
+		LocationBias:          "",
+		LocationBiasPoint:     nil,
+		LocationBiasCenter:    nil,
+		LocationBiasRadius:    0,
+		LocationBiasSouthWest: nil,
+		LocationBiasNorthEast: nil,
+	}
+
+	result, errorFindPlace := c.FindPlaceFromText(context.Background(), findLugar)
+
+	if errorFindPlace != nil {
+		log.Fatal(fmt.Sprintf("error findplace %e", errorFindPlace))
+	}
+
+	pretty.Println(result)
+	return result.Candidates[0].PlaceID
 }
