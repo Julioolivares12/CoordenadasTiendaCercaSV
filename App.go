@@ -1,11 +1,11 @@
 package main
 
 import (
-	"CoordenadasTiendaCercaSV/modelo"
 	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/julioolivares90/CoordenadasTiendaCercaSV/modelo"
 	"github.com/kr/pretty"
 	"googlemaps.github.io/maps"
 	"gopkg.in/h2non/gentleman.v2/plugins/body"
